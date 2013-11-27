@@ -14,7 +14,7 @@ js = (fn) ->
   file = path.normalize "#{current}/script.js"
   try
     js = fs.readFileSync file, 'utf8'
-    #js = uglify.minify js, fromString: true
+    js = uglify.minify js, fromString: true
     fs.writeFileSync file, js.code
     console.log "Done.\n"
   catch err
@@ -27,7 +27,7 @@ css = (fn) ->
   try
     css = fs.readFileSync file, "utf8"
     css = autoprefixer.compile css
-    #css = csso.justDoIt autoprefixer.compile css
+    css = csso.justDoIt css
     fs.writeFileSync file, css
     console.log "Done.\n"
   catch err
