@@ -26,7 +26,7 @@ css = (fn) ->
   file = path.normalize "#{current}/style.css"
   try
     css = fs.readFileSync file, "utf8"
-    css = autoprefixer.compile css
+    css = autoprefixer("ff >=5", "opera >= 12.0").compile css
     css = csso.justDoIt css
     fs.writeFileSync file, css
     console.log "Done.\n"

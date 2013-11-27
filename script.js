@@ -9,10 +9,28 @@
 
   animation = (function(element) {
     var state, interval,
-    style = element.style;
+
+    property = (function () {
+      var property = false,
+      element = document.createElement('div'),
+      prefixes = ['Webkit', 'Moz', 'O', 'ms'];
+
+      if (element.style.animationName) {
+        property = 'animationPlayState';
+        return property;
+      }
+
+      prefixes.forEach(function (prefix) {
+        if (element.style[prefix + 'AnimationName'] !== undefined) {
+          property = prefix + 'AnimationPlayState';
+        }
+      });
+
+      return property;
+    })();
 
     function getState () {
-      state = style.animationPlayState || style.webkitAnimationPlayState || 'paused';
+      state = element.style[property] || 'paused';
       return state;
     }
 
@@ -25,8 +43,7 @@
 
     function setState (s) {
       state = s;
-      style.webkitAnimationPlayState = state;
-      style.animationPlayState = state;
+      element.style[property] = state;
       return state;
     }
 
@@ -45,13 +62,15 @@
     }
 
     function toggle () {
-      element.classList.add(auto);
-      if (state === 'running') {
-        pause();
-        return true;
+      if (property) {
+        element.classList.add(auto);
+        if (state === 'running') {
+          pause();
+          return true;
+        }
+        run();
+        return false
       }
-      run();
-      return false
     }
 
     getState();
@@ -62,7 +81,6 @@
     };
 
   })(spacer);
-
 
   function toInt(n) {
     return parseInt(n.trim(), 10);
