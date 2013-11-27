@@ -5,78 +5,100 @@
   var animated = 'animated',
   auto = 'auto',
   score = document.querySelector('.score'),
-  spacer = document.querySelector('.spacer'), width, min, max, defaultWidth,
+  spacer = document.querySelector('.spacer'), width, min, max,
 
   animation = (function(element) {
-    var state, interval,
+    var isMoving = false, interval,
 
-    property = (function () {
+    prefix = (function () {
       var property = false,
       element = document.createElement('div'),
       prefixes = ['Webkit', 'Moz', 'O', 'ms'];
 
       if (element.style.animationName) {
-        property = 'animationPlayState';
-        return property;
+        return true;
       }
 
       prefixes.forEach(function (prefix) {
         if (element.style[prefix + 'AnimationName'] !== undefined) {
-          property = prefix + 'AnimationPlayState';
+          property = prefix;
         }
       });
-
       return property;
-    })();
 
-    function getState () {
-      state = element.style[property] || 'paused';
-      return state;
+    })(),
+
+    keyframes = (function (name) {
+      var styles = document.styleSheets, result;
+      forEach(styles, function (style) {
+        forEach(style.cssRules, function (rule) {
+          if (isKeyframes(rule.type) && rule.name === name) {
+            result = rule;
+          }
+        });
+      });
+      return result;
+    })('push');
+
+    function isKeyframes (type) {
+      return prefix && ((type === window.CSSRule.KEYFRAMES_RULE) || (type === window.CSSRule[prefix.toUpperCase()+'_KEYFRAMES_RULE']) || (type === 7));
     }
 
-    function isMoving () {
-      if (state === 'running') {
-        return true;
-      }
-      return false;
+    function clearKeyframes () {
+      var keys = [];
+      forEach(keyframes.cssRules, function(rule) {
+        keys.push(rule.keyText);
+      });
+      forEach(keys, function (key) {
+        keyframes.deleteRule(key);
+      });
     }
 
-    function setState (s) {
-      state = s;
-      element.style[property] = state;
-      return state;
+    function createKeyframes () {
+      if (keyframes.insertRule) {
+        keyframes.insertRule("0% {width:"+width+"px}");
+        keyframes.insertRule("100% {width:"+max+"px}");
+      } else {
+        keyframes.appendRule("0% {width:"+width+"px}");
+        keyframes.appendRule("100% {width:"+max+"px}");
+      } 
     }
 
     function run () {
-      setState('running');
+      isMoving = true;
+      createKeyframes();
       interval = setInterval(function() {
         width = element.offsetWidth;
         updateScore();
-      }, 100);
+      },50);
+      return isMoving;
     }
 
     function pause () {
-      setState('paused');
+      isMoving = false;
+      clearKeyframes();
+      width = element.offsetWidth;
       push(0);
       clearInterval(interval);
+      return isMoving;
     }
 
     function toggle () {
-      if (property) {
-        element.classList.add(auto);
-        if (state === 'running') {
-          pause();
-          return true;
-        }
-        run();
-        return false
+      if (prefix) {
+        push(0);
+        return isMoving ? pause() : run();
       }
     }
 
-    getState();
+    function is () {
+      return isMoving;
+    }
+
+    clearKeyframes();
+
     return {
       'toggle': toggle,
-      'is': isMoving,
+      'is': is,
       'stop': pause
     };
 
@@ -86,32 +108,37 @@
     return parseInt(n.trim(), 10);
   }
 
-  function getWidth() {
-    var css = getComputedStyle(spacer);
-    width = toInt(css.getPropertyValue('width'));
-    defaultWidth = width;
-    max = spacer.parentNode.offsetWidth * toInt(css.getPropertyValue('max-width')) / 100;
+  function forEach (array, callback) {
+    [].forEach.call(array, callback);
+  }
+
+  function capitalize (string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
   }
 
   function updateScore() {
     score.innerHTML = Math.round(width) + ' px'
   }
-  
+
+  function addEventListener(target, event, listener) {
+    target.addEventListener(event, listener, false);
+  }
+
+  function getWidth() {
+    var css = getComputedStyle(spacer);
+    width = toInt(css.getPropertyValue('width'));
+    min = width;
+    max = spacer.parentNode.offsetWidth * toInt(css.getPropertyValue('max-width')) / 100;
+  }
+
   function push(n) {
     width = width + n;
-    if (width > max) {
-      width = max;
-    }
-    if (width < defaultWidth) {
-      width = defaultWidth;
-    }
+    width = width < min ? min : width > max ? max : width
     spacer.style.width = width + 'px'
     updateScore();
   }
 
   function setAnimated(n) {
-    spacer.classList.remove(auto);
-    spacer.classList.add(animated);
     if (n) {
       setTimeout(function () {
         push(n);
@@ -121,8 +148,9 @@
 
   function clear() {
     animation.stop();
+    spacer.classList.remove(auto);
     spacer.style.removeProperty('width');
-    width = defaultWidth;
+    width = min;
     setAnimated(0);
     updateScore();
   }
@@ -135,8 +163,11 @@
     setAnimated(dir ? 50 : -50);
   }
 
-  function addEventListener(target, event, listener) {
-    target.addEventListener(event, listener, false);
+  function toggleAnimation () {
+    spacer.classList.toggle(auto);
+    animation.toggle();
+    push(0);
+    spacer.classList.toggle(animated);
   }
 
   getWidth();
@@ -151,7 +182,7 @@
         move(true);
       break;
       case 32: // space
-        animation.toggle();
+        toggleAnimation();
       break;
       case 27: // esc
         clear();
