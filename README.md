@@ -1,4 +1,5 @@
 Exercise for your eyes
 ======================
 
-[More information in Russian](http://habr.ru/p/142096/)
+* [Exercise](http://isquariel.github.io/exerceyes/)
+* [More information in Russian](http://habr.ru/p/142096/)
