@@ -1,193 +1,229 @@
-(function(window){
+(function() {
+    var ANIMATED_CLASS = 'animated',
+        ANIMATION_RUNNING = 'running',
+        ANIMATION_PAUSED = 'paused',
+        ANIMATION_SPEED = 2,
+        ANIMATION_NAME = 'move',
+        STEP = 6;
 
-  "use strict";
+    function Exerceyes() {
+        this.balls = document.querySelector('.balls');
+        this.score = document.querySelector('.score');
+        this.bodyWith = this.getElemWidth(document.body);
 
-  var animated = 'animated',
-  auto = 'auto',
-  score = document.querySelector('.score'),
-  spacer = document.querySelector('.spacer'), width, min, max,
+        this.checkPrefixes();
+        this.findKeyframes();
+        this.listenButtons();
+        this.listenKeyboard();
+        this.updateScore();
+    }
 
-  animation = (function(element) {
-    var isMoving = false, interval,
+    Exerceyes.prototype.play = function() {
+        this.requestAnimationFrame(function() {
+            var width = this.getWidth();
 
-    prefix = (function () {
-      var property = false,
-      element = document.createElement('div'),
-      prefixes = ['Webkit', 'Moz', 'O', 'ms'];
+            this.createKeyframes(width);
+            this.balls.classList.add(ANIMATED_CLASS);
+            this.setPrefixedCss('animation-duration', this.getWidthPercentage(width) / ANIMATION_SPEED);
+            this.setPrefixedCss('animation-play-state', ANIMATION_RUNNING);
 
-      if (element.style.animationName) {
-        return true;
-      }
+            this.spyStart();
 
-      prefixes.forEach(function (prefix) {
-        if (element.style[prefix + 'AnimationName'] !== undefined) {
-          property = prefix;
-        }
-      });
-      return property;
-
-    })(),
-
-    keyframes = (function (name) {
-      var styles = document.styleSheets, result;
-      forEach(styles, function (style) {
-        forEach(style.cssRules, function (rule) {
-          if (isKeyframes(rule.type) && rule.name === name) {
-            result = rule;
-          }
+            this.__isRunning = true;
         });
-      });
-      return result;
-    })('push');
-
-    function isKeyframes (type) {
-      return prefix && ((type === window.CSSRule.KEYFRAMES_RULE) || (type === window.CSSRule[prefix.toUpperCase()+'_KEYFRAMES_RULE']) || (type === 7));
-    }
-
-    function clearKeyframes () {
-      var keys = [];
-      forEach(keyframes.cssRules, function(rule) {
-        keys.push(rule.keyText);
-      });
-      forEach(keys, function (key) {
-        keyframes.deleteRule(key);
-      });
-    }
-
-    function createKeyframes () {
-      if (keyframes.insertRule) {
-        keyframes.insertRule("0% {width:"+width+"px}");
-        keyframes.insertRule("100% {width:"+max+"px}");
-      } else {
-        keyframes.appendRule("0% {width:"+width+"px}");
-        keyframes.appendRule("100% {width:"+max+"px}");
-      } 
-    }
-
-    function run () {
-      isMoving = true;
-      createKeyframes();
-      interval = setInterval(function() {
-        width = element.offsetWidth;
-        updateScore();
-      },50);
-      return isMoving;
-    }
-
-    function pause () {
-      isMoving = false;
-      clearKeyframes();
-      width = element.offsetWidth;
-      push(0);
-      clearInterval(interval);
-      return isMoving;
-    }
-
-    function toggle () {
-      if (prefix) {
-        push(0);
-        return isMoving ? pause() : run();
-      }
-    }
-
-    function is () {
-      return isMoving;
-    }
-
-    clearKeyframes();
-
-    return {
-      'toggle': toggle,
-      'is': is,
-      'stop': pause
     };
 
-  })(spacer);
+    Exerceyes.prototype.pause = function() {
+        this.requestAnimationFrame(function() {
+            this.setPrefixedCss('animation-play-state', ANIMATION_PAUSED);
+            this.clearKeyframes();
+            this.spyStop();
+            this.__isRunning = false;
+        });
+    };
 
-  function toInt(n) {
-    return parseInt(n.trim(), 10);
-  }
+    Exerceyes.prototype.isRunning = function() {
+        return this.__isRunning;
+    };
 
-  function forEach (array, callback) {
-    [].forEach.call(array, callback);
-  }
+    Exerceyes.prototype.toggle = function() {
+        if (this.isRunning()) {
+            this.pause();
+        } else {
+            this.play();
+        }
+    };
 
-  function capitalize (string) {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-  }
+    Exerceyes.prototype.move = function(n) {
+        var widthPercentage;
 
-  function updateScore() {
-    score.innerHTML = Math.round(width) + ' px'
-  }
+        this.requestAnimationFrame(function() {
+            this.pause();
 
-  function addEventListener(target, event, listener) {
-    target.addEventListener(event, listener, false);
-  }
+            widthPercentage = this.getNearestWidthPoint(this.getWidthPercentage(), n);
 
-  function getWidth() {
-    var css = getComputedStyle(spacer);
-    width = toInt(css.getPropertyValue('width'));
-    min = width;
-    max = spacer.parentNode.offsetWidth * toInt(css.getPropertyValue('max-width')) / 100;
-  }
+            this.balls.classList.remove(ANIMATED_CLASS);
+            this.balls.style.width = widthPercentage + '%';
 
-  function push(n) {
-    width = width + n;
-    width = width < min ? min : width > max ? max : width
-    spacer.style.width = width + 'px'
-    updateScore();
-  }
+            this.updateScore();
+        });
+    };
 
-  function setAnimated(n) {
-    if (n) {
-      setTimeout(function () {
-        push(n);
-      }, 0);
-    }
-  }
+    Exerceyes.prototype.reset = function() {
+        this.requestAnimationFrame(function() {
+            this.balls.classList.remove(ANIMATED_CLASS);
+            this.balls.style.width = '';
+            this.clearKeyframes();
+            this.spyStop();
+            this.updateScore();
+        });
+    };
 
-  function clear() {
-    animation.stop();
-    spacer.classList.remove(auto);
-    spacer.style.removeProperty('width');
-    width = min;
-    setAnimated(0);
-    updateScore();
-  }
+    Exerceyes.prototype.getWidth = function() {
+        return this.getElemWidth(this.balls);
+    };
 
-  function move(dir) {
-    if (animation.is()) {
-      return;
-    }
-    push(0);
-    setAnimated(dir ? 50 : -50);
-  }
+    Exerceyes.prototype.getElemWidth = function(elem) {
+        var style = getComputedStyle(elem);
 
-  function toggleAnimation () {
-    spacer.classList.toggle(auto);
-    animation.toggle();
-    push(0);
-    spacer.classList.toggle(animated);
-  }
+        return parseInt(style.getPropertyValue('width'), 10);
+    };
 
-  getWidth();
-  updateScore();
-  spacer.classList.add(animated);
-  addEventListener(window, 'keyup', function(event) {
-    switch (event.keyCode) {
-      case 219: // [
-        move(false);
-      break;
-      case 221: // ]
-        move(true);
-      break;
-      case 32: // space
-        toggleAnimation();
-      break;
-      case 27: // esc
-        clear();
-      break;
-    }
-  });
+    Exerceyes.prototype.getWidthPercentage = function(width) {
+        width = width || this.getWidth();
 
-})(window);
+        return Math.round((width / this.bodyWith) * 100);
+    };
+
+    Exerceyes.prototype.getNearestWidthPoint = function(width, n) {
+        if (width % STEP === 0) {
+            return width + STEP * n;
+        }
+
+        return Math[n > 0 ? 'ceil' : 'floor'](width / STEP) * STEP;
+    };
+
+    Exerceyes.prototype.updateScore = function() {
+        this.requestAnimationFrame(function() {
+            this.score.innerHTML = this.getWidth() + ' px';
+        });
+    };
+
+    Exerceyes.prototype.spyStart = function() {
+        if (this.__spy) {
+            this.spyStop();
+        }
+
+        this.__spy = setInterval(this.updateScore.bind(this), 50);
+    };
+
+    Exerceyes.prototype.spyStop = function() {
+        clearInterval(this.__spy);
+
+        delete this.__spy;
+    };
+
+    Exerceyes.prototype.listenKeyboard = function() {
+        var exerceyes = this;
+
+        window.addEventListener('keyup', function(event) {
+            switch (event.keyCode) {
+                case 219: // [
+                    exerceyes.move(-1);
+                    break;
+                case 221: // ]
+                    exerceyes.move(1);
+                    break;
+                case 32: // space
+                    exerceyes.toggle();
+                    break;
+                case 27: // esc
+                    exerceyes.reset();
+                    break;
+            }
+        }, false);
+    };
+
+    Exerceyes.prototype.listenButtons = function() {
+        var exerceyes = this;
+
+        Array.prototype.forEach.call(document.querySelectorAll('.action'), function(button) {
+            var action = button.getAttribute('data-action'),
+                arg = button.getAttribute('data-arg');
+
+            if (arg) {
+                arg = parseInt(arg, 10);
+            }
+
+            button.addEventListener('click', function() {
+                exerceyes[action](arg);
+            });
+        });
+    };
+
+    Exerceyes.prototype.checkPrefixes = function() {
+        var balls = this.balls;
+
+        [
+            '',
+            'Webkit',
+            'Moz',
+            'O'
+        ].some(function(prop) {
+            if (balls.style.hasOwnProperty(prop + (prop ? 'A' : 'a') + 'nimation')) {
+                this.__prefix = prop;
+                return true;
+            }
+        }.bind(this));
+    };
+
+    Exerceyes.prototype.setPrefixedCss = function(prop, value) {
+        var jsProp = prop.replace(/-(.)/g, function(match, group1) {
+            return group1.toUpperCase();
+        });
+
+        if (this.__prefix) {
+            jsProp = this.__prefix + jsProp[0].toUpperCase() + jsProp.substr(1);
+        }
+
+        this.balls.style[jsProp] = value;
+    };
+
+    Exerceyes.prototype.findKeyframes = function() {
+        var exerceyes = this,
+            styles = document.styleSheets;
+
+        Array.prototype.some.call(styles, function (style) {
+            return Array.prototype.some.call(style.cssRules, function (rule) {
+                if (rule.name === ANIMATION_NAME) {
+                    exerceyes.keyframes = rule;
+
+                    return true;
+                }
+            });
+        });
+    };
+
+    Exerceyes.prototype.clearKeyframes = function() {
+        Array.prototype.forEach.call(this.keyframes.cssRules, function(rule) {
+            this.keyframes.deleteRule(rule.keyText);
+        }.bind(this));
+    };
+
+    Exerceyes.prototype.createKeyframes = function(width) {
+        if (this.keyframes.insertRule) {
+            this.keyframes.insertRule('0% { width:' + width + 'px }');
+            this.keyframes.insertRule('100% { width: 90% }');
+        } else {
+            this.keyframes.appendRule('0% { width:' + width + 'px }');
+            this.keyframes.appendRule('100% { width: 90% }');
+        }
+    };
+
+    Exerceyes.prototype.requestAnimationFrame = function(cb) {
+        return window.requestAnimationFrame(cb.bind(this));
+    };
+
+    new Exerceyes();
+
+})();
