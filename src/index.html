@@ -1,33 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Exerceyes</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <title>Exerceyes</title>
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="info">
-    <dl class="hotkeys">
-      <dt>]</dt>
-      <dd>move apart</dd>
-      <dt>[</dt>
-      <dd>move together</dd>
-      <dt>space</dt>
-      <dd>start/stop animation</dd>
-      <dt>esc</dt>
-      <dd>return to default</dd>
-    </dl>
-    <a class="help" href="http://github.com/Isquariel/exerceyes#readme"
-      target="_blank">?</a>
-  </header>
-  <div class="balls">
-    <figure class="ball ball_left"></figure>
-    <figure class="spacer"></figure>
-    <figure class="ball ball_right"></figure>
-  </div>
-  <footer>
-    <mark class="score"></mark>
-  </footer>
-  <script src="script.js"></script>
+    <header class="info">
+        <span class="score"></span>
+    </header>
+    <section class="balls">
+        <div class="ball"></div>
+        <div class="ball"></div>
+    </section>
+    <footer class="actions">
+        <section class="action" data-action="move" data-arg="1">
+            <span class="action-text">move apart</span>
+            <mark class="action-key">]</mark>
+        </section>
+        <section class="action" data-action="move" data-arg="-1">
+            <span class="action-text">move together</span>
+            <mark class="action-key">[</mark>
+        </section>
+        <section class="action" data-action="toggle">
+            <span class="action-text">start/stop animation</span>
+            <mark class="action-key">space</mark>
+        </section>
+        <section class="action" data-action="reset">
+            <span class="action-text">return to default</span>
+            <mark class="action-key">esc</mark>
+        </section>
+    </footer>
+    <script src="script.js"></script>
 </body>
 </html>
