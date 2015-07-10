@@ -1,5 +1,5 @@
 Exercise for your eyes
 ======================
 
-* [Exercise](http://isqua.github.io/exerceyes/)
-* [More information in Russian](http://habr.ru/p/142096/)
+* [Exercise](https://isqua.github.io/exerceyes/)
+* [More information in Russian](http://geektimes.ru/post/142096/)
