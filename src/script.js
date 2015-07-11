@@ -36,6 +36,9 @@
     Exerceyes.prototype.pause = function() {
         this.requestAnimationFrame(function() {
             this.setPrefixedCss('animation-play-state', ANIMATION_PAUSED);
+            this.balls.style.width = this.getWidth() + 'px';
+            this.balls.classList.remove(ANIMATED_CLASS);
+
             this.clearKeyframes();
             this.spyStop();
             this.__isRunning = false;
