@@ -197,13 +197,15 @@
             styles = document.styleSheets;
 
         Array.prototype.some.call(styles, function (style) {
-            return style.cssRules.length && Array.prototype.some.call(style.cssRules, function (rule) {
+            Array.prototype.forEach.call(style.cssRules, function (rule) {
                 if (rule.name === ANIMATION_NAME) {
                     exerceyes.keyframes = rule;
-
-                    return true;
                 }
             });
+
+            if (exerceyes.keyframes) {
+                return true;
+            }
         });
     };
 
@@ -214,8 +216,13 @@
     };
 
     Exerceyes.prototype.createKeyframes = function(width) {
-        this.keyframes.appendRule('0% { width:' + width + 'px }');
-        this.keyframes.appendRule('100% { width: 90% }');
+        if (this.keyframes.appendRule) {
+            this.keyframes.appendRule('0% { width:' + width + 'px }');
+            this.keyframes.appendRule('100% { width: 90% }');
+        } else {
+            this.keyframes.insertRule('0% { width:' + width + 'px }');
+            this.keyframes.insertRule('100% { width: 90% }');
+        }
     };
 
     Exerceyes.prototype.requestAnimationFrame = function(cb) {
