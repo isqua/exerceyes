@@ -194,7 +194,7 @@
             styles = document.styleSheets;
 
         Array.prototype.some.call(styles, function (style) {
-            return Array.prototype.some.call(style.cssRules, function (rule) {
+            return style.cssRules.length && Array.prototype.some.call(style.cssRules, function (rule) {
                 if (rule.name === ANIMATION_NAME) {
                     exerceyes.keyframes = rule;
 
@@ -211,13 +211,8 @@
     };
 
     Exerceyes.prototype.createKeyframes = function(width) {
-        if (this.keyframes.insertRule) {
-            this.keyframes.insertRule('0% { width:' + width + 'px }');
-            this.keyframes.insertRule('100% { width: 90% }');
-        } else {
-            this.keyframes.appendRule('0% { width:' + width + 'px }');
-            this.keyframes.appendRule('100% { width: 90% }');
-        }
+        this.keyframes.appendRule('0% { width:' + width + 'px }');
+        this.keyframes.appendRule('100% { width: 90% }');
     };
 
     Exerceyes.prototype.requestAnimationFrame = function(cb) {
