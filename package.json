@@ -13,12 +13,9 @@
     "url": "https://github.com/isquariel/exerceyes/issues"
   },
   "homepage": "https://github.com/isquariel/exerceyes",
-  "devDependencies": {
-    "grunt": "^0.4.5",
-    "grunt-autoprefixer": "^2.1.0",
-    "grunt-contrib-cssmin": "^0.11.0",
-    "grunt-contrib-htmlmin": "^0.3.0",
-    "grunt-contrib-uglify": "^0.7.0",
-    "grunt-contrib-watch": "^0.6.1"
+  "devDependencies": {},
+  "dependencies": {
+    "gulp": "^3.9.0",
+    "nbld": "0.0.3"
   }
 }
