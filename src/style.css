@@ -37,47 +37,49 @@ body
 {
     display: flex;
 
-    width: 30%;
-    min-width: 30%;
-    max-width: 90%;
+    width: 90%;
     margin: 0 auto;
 
     flex-grow: 1;
-    justify-content: space-between;
     align-items: center;
+
+    justify-content: space-between;
 }
 
-.balls.animated
+.ball-left,
+.ball-right
 {
-    animation-name: move;
-    animation-duration: 24s;
-    animation-play-state: paused;
-    animation-timing-function: linear;
-
-    animation-fill-mode: forwards;
+    width: 45%;
 }
 
-@keyframes move
+.ball-left
 {
-    from
-    {
-        width: 30%;
-    }
-    to
-    {
-        width: 90%;
-    }
+    transform: scaleX(-1);
 }
 
 .ball
 {
+    content: '';
+    display: block;
     width: 6vw;
     height: 6vw;
     padding: 0;
 
     border-radius: 50%;
     background-color: #444;
+    transition: transform .15s;
 }
+
+.balls.animated .ball
+{
+    animation-name: move;
+    animation-play-state: paused;
+    animation-timing-function: linear;
+
+    animation-fill-mode: forwards;
+}
+
+@keyframes move {}
 
 .actions
 {
@@ -94,6 +96,8 @@ body
 {
     width: 25%;
     padding: 20px 10px;
+    font: inherit;
+    background: transparent;
 
     cursor: pointer;
     transition: background-color .2s;
@@ -107,9 +111,11 @@ body
     flex-grow: 1;
 }
 
-.action:hover
+.action:hover,
+.action:focus
 {
     background-color: rgba(0,0,0,.1);
+    outline: none;
 }
 
 .action:last-child

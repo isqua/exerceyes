@@ -8,29 +8,29 @@
 </head>
 <body>
     <header class="info">
-        <span class="score"></span>
+        <span class="score">0</span>
     </header>
-    <section class="balls">
-        <div class="ball"></div>
-        <div class="ball"></div>
+    <section class="balls animated">
+        <div class="ball-left"><div class="ball"></div></div>
+        <div class="ball-right"><div class="ball"></div></div>
     </section>
     <footer class="actions">
-        <section class="action" data-action="move" data-arg="1">
+        <button type="button" class="action" data-action="apart">
             <span class="action-text">move apart</span>
             <span class="action-key">]</span>
-        </section>
-        <section class="action" data-action="move" data-arg="-1">
+        </button>
+        <button type="button" class="action" data-action="together">
             <span class="action-text">move together</span>
             <span class="action-key">[</span>
-        </section>
-        <section class="action" data-action="toggle">
+        </button>
+        <button type="button" class="action" data-action="toggle">
             <span class="action-text">start/stop animation</span>
             <span class="action-key">space</span>
-        </section>
-        <section class="action" data-action="reset">
+        </button>
+        <button type="button" class="action" data-action="reset">
             <span class="action-text">return to default</span>
             <span class="action-key">esc</span>
-        </section>
+        </button>
     </footer>
     <script src="script.js"></script>
 </body>
