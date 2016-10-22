@@ -12,6 +12,9 @@
   "bugs": {
     "url": "https://github.com/isquariel/exerceyes/issues"
   },
+  "scripts": {
+    "build": "gulp production"
+  },
   "homepage": "https://github.com/isquariel/exerceyes",
   "devDependencies": {},
   "dependencies": {
