@@ -63,6 +63,7 @@
         this.score = document.querySelector('.score');
 
         this.keyframes = findKeyframes(KEYFRAMES_NAME);
+        clearKeyframes(this.keyframes);
 
         this.getDimensions();
         this.listenKeyboard();
