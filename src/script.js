@@ -1,115 +1,217 @@
+'use strict';
+
 (function() {
-    var ANIMATED_CLASS = 'animated',
-        ANIMATION_RUNNING = 'running',
-        ANIMATION_PAUSED = 'paused',
-        ANIMATION_SPEED = 2,
-        ANIMATION_NAME = 'move',
-        STEP = 6;
+    var ANIMATED_CLASS = 'animated';
+    var KEYFRAMES_NAME = 'move';
+    var ANIMATION_SPEED = 0.1;
+    var STEP = 20;
 
-    function Exerceyes() {
-        this.balls = document.querySelector('.balls');
-        this.score = document.querySelector('.score');
-        this.bodyWith = this.getElemWidth(document.body);
+    var ANIMATION_RUNNING = 'running';
+    var ANIMATION_PAUSED = 'paused';
 
-        this.checkPrefixes();
-        this.findKeyframes();
-        this.listenButtons();
-        this.listenKeyboard();
-        this.updateScore();
+    var ANIMATION = 'animation';
+    var TRANSFORM = 'transform';
+    var ANIMATION_DURATION = 'animation-duration';
+    var ANIMATION_PLAY_STATE = 'animation-play-state';
+
+    function findKeyframes(name) {
+        var styles = document.styleSheets;
+        var keyframes;
+
+        Array.prototype.some.call(styles, function (style) {
+            Array.prototype.forEach.call(style.cssRules, function (rule) {
+                if (rule.name === name) {
+                    keyframes = rule;
+                }
+            });
+
+            if (keyframes) {
+                return true;
+            }
+        });
+
+        return keyframes;
     }
 
-    Exerceyes.prototype.play = function() {
-        this.requestAnimationFrame(function() {
-            var width = this.getWidth();
-
-            this.createKeyframes(width);
-            this.balls.classList.add(ANIMATED_CLASS);
-            this.setPrefixedCss('animation-duration', this.getWidthPercentage(width) / ANIMATION_SPEED);
-            this.setPrefixedCss('animation-play-state', ANIMATION_RUNNING);
-
-            this.spyStart();
-
-            this.__isRunning = true;
+    function clearKeyframes(keyframes) {
+        Array.prototype.forEach.call(keyframes.cssRules, function(rule) {
+            keyframes.deleteRule(rule.keyText);
         });
+    }
+
+    function createKeyframes(keyframes, rules) {
+        if (keyframes.appendRule) {
+            rules.forEach(function(rule) {
+                keyframes.appendRule(rule);
+            });
+        } else {
+            rules.forEach(function(rule) {
+                keyframes.insertRule(rule);
+            });
+        }
+    }
+
+    function getWidth(elem) {
+        return parseInt(getComputedStyle(elem).width, 10);
+    }
+
+    function Exerceyes() {
+        var balls = document.querySelectorAll('.ball');
+
+        this.balls = [ balls[0], balls[1] ];
+        this.ballsContainer = document.querySelector('.balls');
+        this.score = document.querySelector('.score');
+
+        this.keyframes = findKeyframes(KEYFRAMES_NAME);
+
+        this.getDimensions();
+        this.listenKeyboard();
+        this.listenButtons();
+
+        window.addEventListener('resize', function() {
+            this.getDimensions();
+        }.bind(this));
+    };
+
+    Exerceyes.prototype.getDimensions = function() {
+        var barWidth = getWidth(document.querySelector('.ball-left'));
+        var ballWidth = getWidth(this.balls[0]);
+
+        this.maxTranslate = barWidth - ballWidth;
+        this.maxPercentage = this.maxTranslate / ballWidth * 100;
+    };
+
+    Exerceyes.prototype.play = function() {
+        var rest = this.maxTranslate - this.getTranslate();
+
+        this.ballsContainer.classList.add(ANIMATED_CLASS);
+
+        createKeyframes(this.keyframes, [
+            '0% { transform: ' + this.css(TRANSFORM) + ' }',
+            '100% { transform: translateX(' + this.maxTranslate + 'px) }',
+        ]);
+
+        this.css(ANIMATION_DURATION, rest * ANIMATION_SPEED + 's');
+        this.css(ANIMATION_PLAY_STATE, ANIMATION_RUNNING);
+
+        this.spyStart();
+        this.__isRunning = true;
     };
 
     Exerceyes.prototype.pause = function() {
-        this.requestAnimationFrame(function() {
-            this.setPrefixedCss('animation-play-state', ANIMATION_PAUSED);
-            this.balls.style.width = this.getWidth() + 'px';
-            this.balls.classList.remove(ANIMATED_CLASS);
+        this.css(ANIMATION_PLAY_STATE, ANIMATION_PAUSED);
+        this.css(TRANSFORM, this.css(TRANSFORM));
+        this.ballsContainer.classList.remove(ANIMATED_CLASS);
 
-            this.clearKeyframes();
-            this.spyStop();
-            this.__isRunning = false;
-        });
-    };
+        clearKeyframes(this.keyframes);
 
-    Exerceyes.prototype.isRunning = function() {
-        return this.__isRunning;
+        this.spyStop();
+        this.__isRunning = false;
     };
 
     Exerceyes.prototype.toggle = function() {
-        if (this.isRunning()) {
+        if (this.__isRunning) {
             this.pause();
         } else {
             this.play();
         }
     };
 
-    Exerceyes.prototype.move = function(n) {
-        var widthPercentage;
-
-        this.requestAnimationFrame(function() {
-            this.pause();
-
-            widthPercentage = this.getNearestWidthPoint(this.getWidthPercentage(), n);
-
-            this.balls.classList.remove(ANIMATED_CLASS);
-            this.balls.style.width = widthPercentage + '%';
-
-            this.updateScore();
-        });
-    };
-
     Exerceyes.prototype.reset = function() {
-        this.requestAnimationFrame(function() {
-            this.balls.classList.remove(ANIMATED_CLASS);
-            this.balls.style.width = '';
-            this.clearKeyframes();
-            this.spyStop();
-            this.updateScore();
-        });
+        this.ballsContainer.classList.remove(ANIMATED_CLASS);
+        this.css(TRANSFORM, 'none');
+        clearKeyframes(this.keyframes);
+
+        this.spyStop();
+        this.updateScore();
     };
 
-    Exerceyes.prototype.getWidth = function() {
-        return this.getElemWidth(this.balls);
+    Exerceyes.prototype.together = function() {
+        this.move(-1);
     };
 
-    Exerceyes.prototype.getElemWidth = function(elem) {
-        var style = getComputedStyle(elem);
-
-        return parseInt(style.getPropertyValue('width'), 10);
+    Exerceyes.prototype.apart = function() {
+        this.move(1);
     };
 
-    Exerceyes.prototype.getWidthPercentage = function(width) {
-        width = width || this.getWidth();
+    Exerceyes.prototype.move = function(n) {
+        var currentProgress = Math.round(this.getTranslate() / getWidth(this.balls[0]) * 100);
 
-        return Math.round((width / this.bodyWith) * 100);
+        if (this.__isRunning) {
+            this.pause();
+        }
+
+        var widthPercentage = this.getNearestWidthPoint(currentProgress, n);
+
+        this.ballsContainer.classList.remove(ANIMATED_CLASS);
+        this.css(TRANSFORM, 'translateX(' + widthPercentage +'%)');
+
+        this.updateScore();
     };
 
     Exerceyes.prototype.getNearestWidthPoint = function(width, n) {
+        var result;
+
         if (width % STEP === 0) {
-            return width + STEP * n;
+            result = width + STEP * n;
+        } else if (n > 0) {
+            result = Math.ceil(width / STEP) * STEP;
+        } else {
+            result = (Math.floor(width / STEP) - 1) * STEP;
         }
 
-        return Math[n > 0 ? 'ceil' : 'floor'](width / STEP) * STEP;
+        return Math.min(Math.max(result, 0), this.maxPercentage);
+    };
+
+    Exerceyes.prototype.listenKeyboard = function() {
+        var exerceyes = this;
+        var codes = {
+            // [
+            219: 'together',
+            // ]
+            221: 'apart',
+            // space
+            32: 'toggle',
+            // esc
+            27: 'reset'
+        };
+
+        window.addEventListener('keyup', function(event) {
+            var method = codes[event.keyCode];
+
+            if (method) {
+                exerceyes[method]();
+            }
+        }, false);
+    };
+
+    Exerceyes.prototype.listenButtons = function() {
+        var exerceyes = this;
+
+        Array.prototype.forEach.call(document.querySelectorAll('.action'), function(button) {
+            button.addEventListener('click', function() {
+                exerceyes[this.getAttribute('data-action')]();
+            });
+        });
+    };
+
+    Exerceyes.prototype.css = function(prop, value) {
+        if (value === void 0) {
+            return getComputedStyle(this.balls[0])[prop];
+        } else {
+            this.balls[0].style[prop] = value;
+            this.balls[1].style[prop] = value;
+        }
+    };
+
+    Exerceyes.prototype.getTranslate = function() {
+        return this.css(TRANSFORM).split(',')[4] || 0
     };
 
     Exerceyes.prototype.updateScore = function() {
-        this.requestAnimationFrame(function() {
-            this.score.innerHTML = this.getWidth() + ' px';
-        });
+        window.requestAnimationFrame(function() {
+            this.score.innerHTML = Math.round(this.getTranslate() * 2);
+        }.bind(this));
     };
 
     Exerceyes.prototype.spyStart = function() {
@@ -124,109 +226,6 @@
         clearInterval(this.__spy);
 
         delete this.__spy;
-    };
-
-    Exerceyes.prototype.listenKeyboard = function() {
-        var exerceyes = this;
-
-        window.addEventListener('keyup', function(event) {
-            switch (event.keyCode) {
-                case 219: // [
-                    exerceyes.move(-1);
-                    break;
-                case 221: // ]
-                    exerceyes.move(1);
-                    break;
-                case 32: // space
-                    exerceyes.toggle();
-                    break;
-                case 27: // esc
-                    exerceyes.reset();
-                    break;
-            }
-        }, false);
-    };
-
-    Exerceyes.prototype.listenButtons = function() {
-        var exerceyes = this;
-
-        Array.prototype.forEach.call(document.querySelectorAll('.action'), function(button) {
-            var action = button.getAttribute('data-action'),
-                arg = button.getAttribute('data-arg');
-
-            if (arg) {
-                arg = parseInt(arg, 10);
-            }
-
-            button.addEventListener('click', function() {
-                exerceyes[action](arg);
-            });
-        });
-    };
-
-    Exerceyes.prototype.checkPrefixes = function() {
-        var balls = this.balls;
-
-        [
-            '',
-            'Webkit',
-            'Moz',
-            'O'
-        ].some(function(prop) {
-            if (balls.style.hasOwnProperty(prop + (prop ? 'A' : 'a') + 'nimation')) {
-                this.__prefix = prop;
-                return true;
-            }
-        }.bind(this));
-    };
-
-    Exerceyes.prototype.setPrefixedCss = function(prop, value) {
-        var jsProp = prop.replace(/-(.)/g, function(match, group1) {
-            return group1.toUpperCase();
-        });
-
-        if (this.__prefix) {
-            jsProp = this.__prefix + jsProp[0].toUpperCase() + jsProp.substr(1);
-        }
-
-        this.balls.style[jsProp] = value;
-    };
-
-    Exerceyes.prototype.findKeyframes = function() {
-        var exerceyes = this,
-            styles = document.styleSheets;
-
-        Array.prototype.some.call(styles, function (style) {
-            Array.prototype.forEach.call(style.cssRules, function (rule) {
-                if (rule.name === ANIMATION_NAME) {
-                    exerceyes.keyframes = rule;
-                }
-            });
-
-            if (exerceyes.keyframes) {
-                return true;
-            }
-        });
-    };
-
-    Exerceyes.prototype.clearKeyframes = function() {
-        Array.prototype.forEach.call(this.keyframes.cssRules, function(rule) {
-            this.keyframes.deleteRule(rule.keyText);
-        }.bind(this));
-    };
-
-    Exerceyes.prototype.createKeyframes = function(width) {
-        if (this.keyframes.appendRule) {
-            this.keyframes.appendRule('0% { width:' + width + 'px }');
-            this.keyframes.appendRule('100% { width: 90% }');
-        } else {
-            this.keyframes.insertRule('0% { width:' + width + 'px }');
-            this.keyframes.insertRule('100% { width: 90% }');
-        }
-    };
-
-    Exerceyes.prototype.requestAnimationFrame = function(cb) {
-        return window.requestAnimationFrame(cb.bind(this));
     };
 
     new Exerceyes();
