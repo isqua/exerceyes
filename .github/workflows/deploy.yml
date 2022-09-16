@@ -1,0 +1,33 @@
+name: Deploy
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 8.x
+      - name: install dependencies
+        run: npm install
+      - name: build app
+        run: npm run build
+      - name: setup pages
+        uses: actions/configure-pages@v2
+      - name: upload artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: ./build
+      - name: deploy to github pages
+        id: deployment
+        uses: actions/deploy-pages@v1
